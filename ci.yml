@@ -1,0 +1,17 @@
+name: test Webpage Actions
+run-name: ${{ github.actor }} is testing out GitHub Actions
+on: [push]
+jobs:
+  HTMLHint:
+    runs-on: ubuntu-latest
+    container:
+      image: node:20-alpine
+    steps:
+      - run: npm install -g htmlhint
+      - run: htmlhint "**/*.html"
+  lychee:
+    runs-on: ubuntu-latest
+    container:
+      image: lycheeverse/lychee:master
+    steps:
+      - run: lychee .
