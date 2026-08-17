@@ -7,6 +7,7 @@ jobs:
     container:
       image: node:20-alpine
     steps:
+      - uses: actions/checkout@v4
       - run: npm install -g htmlhint
       - run: htmlhint "**/*.html"
   lychee:
@@ -14,4 +15,5 @@ jobs:
     container:
       image: lycheeverse/lychee:master
     steps:
+      - uses: actions/checkout@v4
       - run: lychee .
