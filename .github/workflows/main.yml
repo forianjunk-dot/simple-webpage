@@ -14,6 +14,4 @@ jobs:
     container:
       image: lycheeverse/lychee:master
     steps:
-      -run: lychee .
-
-  
+      - run: lychee .
