@@ -20,6 +20,17 @@
       }
       th {
         background-color: #f2f2f2;
+        cursor: pointer;
+        user-select: none;
+      }
+      th:hover {
+        background-color: #e6e6e6;
+      }
+      th[aria-sort="ascending"]::after {
+        content: " \2191";
+      }
+      th[aria-sort="descending"]::after {
+        content: " \2193";
       }
       a {
         color: #0066cc;
@@ -38,11 +49,11 @@
     <table>
       <thead>
         <tr>
-          <th>Name</th>
-          <th>Add ingredients</th>
-          <th>Ingredients</th>
-          <th>Instructions</th>
-          <th>Source</th>
+          <th scope="col" data-sort-type="text">Name</th>
+          <th scope="col" data-sort-type="checkbox">Add ingredients</th>
+          <th scope="col" data-sort-type="text">Ingredients</th>
+          <th scope="col" data-sort-type="text">Instructions</th>
+          <th scope="col" data-sort-type="text">Source</th>
         </tr>
       </thead>
       <tbody>
@@ -66,6 +77,27 @@
           <td><a href="recipes/creamy-parmesan-one-pot-chicken-rice.html#ingredients">View ingredients</a></td>
           <td><a href="recipes/creamy-parmesan-one-pot-chicken-rice.html#instructions">View instructions</a></td>
           <td><a href="https://thesaltymarshmallow.com/creamy-parmesan-one-pot-chicken-rice/" target="_blank" rel="noopener noreferrer">View source</a></td>
+        </tr>
+        <tr>
+          <td><a href="recipes/slow-cooker-boursin-cheese-chicken-pasta.html">Slow Cooker Boursin Cheese Chicken Pasta</a></td>
+          <td><input type="checkbox" class="recipe-checkbox" data-recipe="recipes/slow-cooker-boursin-cheese-chicken-pasta.html#ingredients" aria-label="Add Slow Cooker Boursin Cheese Chicken Pasta ingredients" /></td>
+          <td><a href="recipes/slow-cooker-boursin-cheese-chicken-pasta.html#ingredients">View ingredients</a></td>
+          <td><a href="recipes/slow-cooker-boursin-cheese-chicken-pasta.html#instructions">View instructions</a></td>
+          <td><a href="https://www.themagicalslowcooker.com/boursin-cheese-chicken-pasta/" target="_blank" rel="noopener noreferrer">View source</a></td>
+        </tr>
+        <tr>
+          <td><a href="recipes/garlic-parmesan-chicken-tortellini.html">Garlic Parmesan Chicken Tortellini</a></td>
+          <td><input type="checkbox" class="recipe-checkbox" data-recipe="recipes/garlic-parmesan-chicken-tortellini.html#ingredients" aria-label="Add Garlic Parmesan Chicken Tortellini ingredients" /></td>
+          <td><a href="recipes/garlic-parmesan-chicken-tortellini.html#ingredients">View ingredients</a></td>
+          <td><a href="recipes/garlic-parmesan-chicken-tortellini.html#instructions">View instructions</a></td>
+          <td><a href="https://www.cookwithnatash.com/garlic-parmesan-chicken-tortellini-easy-delicious/" target="_blank" rel="noopener noreferrer">View source</a></td>
+        </tr>
+        <tr>
+          <td><a href="recipes/easy-one-pan-creamy-baked-ravioli.html">Easy One Pan Creamy Baked Ravioli</a></td>
+          <td><input type="checkbox" class="recipe-checkbox" data-recipe="recipes/easy-one-pan-creamy-baked-ravioli.html#ingredients" aria-label="Add Easy One Pan Creamy Baked Ravioli ingredients" /></td>
+          <td><a href="recipes/easy-one-pan-creamy-baked-ravioli.html#ingredients">View ingredients</a></td>
+          <td><a href="recipes/easy-one-pan-creamy-baked-ravioli.html#instructions">View instructions</a></td>
+          <td><a href="https://www.allrecipes.com/easy-one-pan-creamy-baked-ravioli-recipe-11680074" target="_blank" rel="noopener noreferrer">View source</a></td>
         </tr>
       </tbody>
     </table>
@@ -183,6 +215,55 @@
 
       document.querySelectorAll(".recipe-checkbox").forEach((checkbox) => {
         checkbox.addEventListener("change", renderSelectedIngredients);
+      });
+
+      const recipeTable = document.querySelector("table");
+      const recipeTableBody = recipeTable.querySelector("tbody");
+      const sortableHeaders = recipeTable.querySelectorAll("th[data-sort-type]");
+      const sortDirections = new Map();
+
+      function getCellSortValue(row, columnIndex, sortType) {
+        if (sortType === "checkbox") {
+          return row.cells[columnIndex].querySelector("input").checked ? 1 : 0;
+        }
+
+        return row.cells[columnIndex].textContent.trim().toLocaleLowerCase();
+      }
+
+      sortableHeaders.forEach((header, columnIndex) => {
+        header.setAttribute("role", "button");
+        header.setAttribute("tabindex", "0");
+        header.setAttribute("aria-label", `Sort by ${header.textContent}`);
+
+        function sortRows() {
+          const direction = sortDirections.get(columnIndex) === "ascending" ? "descending" : "ascending";
+          sortDirections.clear();
+          sortDirections.set(columnIndex, direction);
+
+          sortableHeaders.forEach((otherHeader) => otherHeader.removeAttribute("aria-sort"));
+          header.setAttribute("aria-sort", direction);
+
+          const multiplier = direction === "ascending" ? 1 : -1;
+          const rows = [...recipeTableBody.rows];
+          rows.sort((firstRow, secondRow) => {
+            const firstValue = getCellSortValue(firstRow, columnIndex, header.dataset.sortType);
+            const secondValue = getCellSortValue(secondRow, columnIndex, header.dataset.sortType);
+
+            if (firstValue < secondValue) return -1 * multiplier;
+            if (firstValue > secondValue) return 1 * multiplier;
+            return 0;
+          });
+
+          rows.forEach((row) => recipeTableBody.appendChild(row));
+        }
+
+        header.addEventListener("click", sortRows);
+        header.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            sortRows();
+          }
+        });
       });
     </script>
   </body>
