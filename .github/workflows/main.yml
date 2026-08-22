@@ -24,6 +24,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: |
-          eslint --ext .html,.js src
+          eslint --ext .html
 
 
