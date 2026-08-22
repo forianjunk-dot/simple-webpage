@@ -20,9 +20,26 @@
       }
       th {
         background-color: #f2f2f2;
+        cursor: pointer;
+        user-select: none;
+      }
+      th:hover {
+        background-color: #e6e6e6;
+      }
+      th[aria-sort="ascending"]::after {
+        content: " \2191";
+      }
+      th[aria-sort="descending"]::after {
+        content: " \2193";
       }
       a {
         color: #0066cc;
+      }
+      #ingredient-frame {
+        width: 100%;
+        min-height: 450px;
+        border: 1px solid #ccc;
+        margin-top: 12px;
       }
     </style>
   </head>
@@ -32,26 +49,222 @@
     <table>
       <thead>
         <tr>
-          <th>Name</th>
-          <th>Ingredients</th>
-          <th>Instructions</th>
-          <th>Source</th>
+          <th scope="col" data-sort-type="text">Name</th>
+          <th scope="col" data-sort-type="checkbox">Add ingredients</th>
+          <th scope="col" data-sort-type="text">Ingredients</th>
+          <th scope="col" data-sort-type="text">Instructions</th>
+          <th scope="col" data-sort-type="text">Source</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td><a href="recipes/bobby-flay-italian-meatball.html">Bobby Flay Italian Meatballs</a></td>
+          <td><input type="checkbox" class="recipe-checkbox" data-recipe="recipes/bobby-flay-italian-meatball.html#ingredients" aria-label="Add Bobby Flay Italian Meatballs ingredients" /></td>
           <td><a href="recipes/bobby-flay-italian-meatball.html#ingredients">View ingredients</a></td>
           <td><a href="recipes/bobby-flay-italian-meatball.html#instructions">View instructions</a></td>
           <td><a href="https://bonsaimary.com/bobby-flays-italian-meatball-recipe.html#source">View source</a></td>
         </tr>
         <tr>
           <td><a href="recipes/low-carb-firecracker-ground-chicken.html">Low-Carb Firecracker Ground Chicken</a></td>
+          <td><input type="checkbox" class="recipe-checkbox" data-recipe="recipes/low-carb-firecracker-ground-chicken.html#ingredients" aria-label="Add Low-Carb Firecracker Ground Chicken ingredients" /></td>
           <td><a href="recipes/low-carb-firecracker-ground-chicken.html#ingredients">View ingredients</a></td>
           <td><a href="recipes/low-carb-firecracker-ground-chicken.html#instructions">View instructions</a></td>
           <td><a href="https://masonfit.com/low-carb-firecracker-ground-chicken/" target="_blank" rel="noopener noreferrer">View source</a></td>
         </tr>
+        <tr>
+          <td><a href="recipes/creamy-parmesan-one-pot-chicken-rice.html">Creamy Parmesan One Pot Chicken and Rice</a></td>
+          <td><input type="checkbox" class="recipe-checkbox" data-recipe="recipes/creamy-parmesan-one-pot-chicken-rice.html#ingredients" aria-label="Add Creamy Parmesan One Pot Chicken and Rice ingredients" /></td>
+          <td><a href="recipes/creamy-parmesan-one-pot-chicken-rice.html#ingredients">View ingredients</a></td>
+          <td><a href="recipes/creamy-parmesan-one-pot-chicken-rice.html#instructions">View instructions</a></td>
+          <td><a href="https://thesaltymarshmallow.com/creamy-parmesan-one-pot-chicken-rice/" target="_blank" rel="noopener noreferrer">View source</a></td>
+        </tr>
+        <tr>
+          <td><a href="recipes/slow-cooker-boursin-cheese-chicken-pasta.html">Slow Cooker Boursin Cheese Chicken Pasta</a></td>
+          <td><input type="checkbox" class="recipe-checkbox" data-recipe="recipes/slow-cooker-boursin-cheese-chicken-pasta.html#ingredients" aria-label="Add Slow Cooker Boursin Cheese Chicken Pasta ingredients" /></td>
+          <td><a href="recipes/slow-cooker-boursin-cheese-chicken-pasta.html#ingredients">View ingredients</a></td>
+          <td><a href="recipes/slow-cooker-boursin-cheese-chicken-pasta.html#instructions">View instructions</a></td>
+          <td><a href="https://www.themagicalslowcooker.com/boursin-cheese-chicken-pasta/" target="_blank" rel="noopener noreferrer">View source</a></td>
+        </tr>
+        <tr>
+          <td><a href="recipes/garlic-parmesan-chicken-tortellini.html">Garlic Parmesan Chicken Tortellini</a></td>
+          <td><input type="checkbox" class="recipe-checkbox" data-recipe="recipes/garlic-parmesan-chicken-tortellini.html#ingredients" aria-label="Add Garlic Parmesan Chicken Tortellini ingredients" /></td>
+          <td><a href="recipes/garlic-parmesan-chicken-tortellini.html#ingredients">View ingredients</a></td>
+          <td><a href="recipes/garlic-parmesan-chicken-tortellini.html#instructions">View instructions</a></td>
+          <td><a href="https://www.cookwithnatash.com/garlic-parmesan-chicken-tortellini-easy-delicious/" target="_blank" rel="noopener noreferrer">View source</a></td>
+        </tr>
+        <tr>
+          <td><a href="recipes/easy-one-pan-creamy-baked-ravioli.html">Easy One Pan Creamy Baked Ravioli</a></td>
+          <td><input type="checkbox" class="recipe-checkbox" data-recipe="recipes/easy-one-pan-creamy-baked-ravioli.html#ingredients" aria-label="Add Easy One Pan Creamy Baked Ravioli ingredients" /></td>
+          <td><a href="recipes/easy-one-pan-creamy-baked-ravioli.html#ingredients">View ingredients</a></td>
+          <td><a href="recipes/easy-one-pan-creamy-baked-ravioli.html#instructions">View instructions</a></td>
+          <td><a href="https://www.allrecipes.com/easy-one-pan-creamy-baked-ravioli-recipe-11680074" target="_blank" rel="noopener noreferrer">View source</a></td>
+        </tr>
       </tbody>
     </table>
+
+    <section id="selected-ingredients">
+      <h2>Selected Ingredients</h2>
+      <iframe id="ingredient-frame" title="Selected recipe ingredients"></iframe>
+    </section>
+
+    <script>
+      const ingredientFrame = document.getElementById("ingredient-frame");
+      let renderVersion = 0;
+
+      async function loadIngredients(recipeUrl) {
+        const cleanUrl = recipeUrl.split("#")[0];
+        const response = await fetch(cleanUrl);
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status} loading ${cleanUrl}`);
+        }
+
+        const htmlText = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlText, "text/html");
+
+        const ingredients = doc.querySelector("#ingredients") || doc.querySelector("table");
+        const title = doc.querySelector("h1") || doc.querySelector("h2");
+
+        if (!ingredients) {
+          throw new Error(`Ingredients element not found in ${cleanUrl}`);
+        }
+
+        return {
+          title: title ? title.textContent : "Recipe Ingredients",
+          content: ingredients.outerHTML,
+        };
+      }
+
+      async function renderSelectedIngredients() {
+        const version = ++renderVersion;
+        const selectedRecipes = [...document.querySelectorAll(".recipe-checkbox:checked")]
+          .map((checkbox) => checkbox.dataset.recipe);
+
+        if (selectedRecipes.length === 0) {
+          ingredientFrame.srcdoc = "";
+          return;
+        }
+
+        try {
+          const recipes = await Promise.all(selectedRecipes.map(loadIngredients));
+
+          if (version !== renderVersion) return;
+
+          ingredientFrame.srcdoc = `
+            <!DOCTYPE html>
+            <html lang="en">
+              <head>
+                <meta charset="UTF-8">
+                <style>
+                  * { box-sizing: border-box; }
+                  body { 
+                    font-family: Arial, sans-serif; 
+                    margin: 16px; 
+                    color: #333; 
+                  }
+                  .grid-container {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 20px;
+                    align-items: flex-start;
+                  }
+                  section { 
+                    flex: 1 1 300px; /* Expands to fill space, wraps under 300px width */
+                    min-width: 280px;
+                    border: 1px solid #ddd; 
+                    border-radius: 8px;
+                    padding: 16px; 
+                    background-color: #fff;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+                  }
+                  h2 { 
+                    margin-top: 0; 
+                    font-size: 1.1rem; 
+                    color: #2c3e50; 
+                    border-bottom: 2px solid #f2f2f2;
+                    padding-bottom: 8px;
+                  }
+                  table { 
+                    width: 100%; 
+                    border-collapse: collapse; 
+                    margin-top: 10px; 
+                  }
+                  th, td { 
+                    border: 1px solid #e0e0e0; 
+                    padding: 8px 10px; 
+                    text-align: left; 
+                    font-size: 0.95rem;
+                  }
+                  th { 
+                    background-color: #f8f9fa; 
+                  }
+                </style>
+              </head>
+              <body>
+                <div class="grid-container">
+                  ${recipes.map((recipe) => `<section><h2>${recipe.title}</h2>${recipe.content}</section>`).join("")}
+                </div>
+              </body>
+            </html>`;
+        } catch (error) {
+          console.error("Error fetching ingredients:", error);
+          ingredientFrame.srcdoc = `<p style="color:red; padding:20px;">Error loading data: ${error.message}</p>`;
+        }
+      }
+
+      document.querySelectorAll(".recipe-checkbox").forEach((checkbox) => {
+        checkbox.addEventListener("change", renderSelectedIngredients);
+      });
+
+      const recipeTable = document.querySelector("table");
+      const recipeTableBody = recipeTable.querySelector("tbody");
+      const sortableHeaders = recipeTable.querySelectorAll("th[data-sort-type]");
+      const sortDirections = new Map();
+
+      function getCellSortValue(row, columnIndex, sortType) {
+        if (sortType === "checkbox") {
+          return row.cells[columnIndex].querySelector("input").checked ? 1 : 0;
+        }
+
+        return row.cells[columnIndex].textContent.trim().toLocaleLowerCase();
+      }
+
+      sortableHeaders.forEach((header, columnIndex) => {
+        header.setAttribute("role", "button");
+        header.setAttribute("tabindex", "0");
+        header.setAttribute("aria-label", `Sort by ${header.textContent}`);
+
+        function sortRows() {
+          const direction = sortDirections.get(columnIndex) === "ascending" ? "descending" : "ascending";
+          sortDirections.clear();
+          sortDirections.set(columnIndex, direction);
+
+          sortableHeaders.forEach((otherHeader) => otherHeader.removeAttribute("aria-sort"));
+          header.setAttribute("aria-sort", direction);
+
+          const multiplier = direction === "ascending" ? 1 : -1;
+          const rows = [...recipeTableBody.rows];
+          rows.sort((firstRow, secondRow) => {
+            const firstValue = getCellSortValue(firstRow, columnIndex, header.dataset.sortType);
+            const secondValue = getCellSortValue(secondRow, columnIndex, header.dataset.sortType);
+
+            if (firstValue < secondValue) return -1 * multiplier;
+            if (firstValue > secondValue) return 1 * multiplier;
+            return 0;
+          });
+
+          rows.forEach((row) => recipeTableBody.appendChild(row));
+        }
+
+        header.addEventListener("click", sortRows);
+        header.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            sortRows();
+          }
+        });
+      });
+    </script>
   </body>
 </html>
