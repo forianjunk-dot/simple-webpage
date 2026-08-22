@@ -20,16 +20,10 @@ jobs:
   eslint:
     runs-on: ubuntu-latest
     container:
-      image: cytopia/eslint
+      image: pipelinecomponents/eslint:edge
     steps:
       - uses: actions/checkout@v4
       - run: |
-          sudo apk update
-          sudo apk add nodejs npm
-          apk update && apk add nodejs npm
-          npm init -y
-          npm install --save-dev eslint eslint-plugin-html
-          npm install --save-dev eslint-plugin-html
-          npx eslint --ext .html,.js src
+          eslint --ext .html,.js src
 
 
